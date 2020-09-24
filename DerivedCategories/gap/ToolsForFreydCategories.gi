@@ -1739,3 +1739,86 @@ InstallMethod( DisplayCapCategoryCell,
     Display( Concatenation( StringMutable( alpha ), " defined by the above morphism datum" ) );
 
 end );
+
+
+#######################
+#
+# LaTeX Strings
+#
+#######################
+
+##
+InstallMethod( LaTeXStringOp,
+          [ IsAdditiveClosureObject ],
+          
+  function( obj )
+    local l, latex_string;
+    
+    l := ObjectList( obj );
+    
+    if IsEmpty( l ) then
+      
+      return "0";
+      
+    fi;
+    
+    l := CollectEntries( l );
+    
+    l := List( l,
+            function( pair )
+              local s;
+              
+              s := Concatenation( "{", LaTeXOutput( pair[ 1 ] ), "}" );
+              
+              if pair[ 2 ] <> 1 then
+                  s := Concatenation( s, "^{\\oplus ", String( pair[ 2 ] ), "}" );
+              fi;
+              
+              return s;
+              
+            end );
+            
+    return JoinStringsWithSeparator( l, "\\oplus" );
+    
+end );
+
+##
+InstallMethod( LaTeXStringOp,
+          [ IsAdditiveClosureMorphism ],
+          
+  function( morphism )
+    local matrix, source, range;
+    
+    matrix := MorphismMatrix( morphism );
+    
+    if IsEmpty( matrix ) then
+        matrix := "0";
+    else
+        
+        matrix := JoinStringsWithSeparator(
+            List( matrix, row -> JoinStringsWithSeparator( List( row, morphism -> LaTeXOutput( morphism : OnlyDatum := true ) ), "\&" ) ),
+            "\\\\ \n"
+          );
+          
+        matrix :=  Concatenation( "\\begin{pmatrix}", matrix, "\\end{pmatrix}" );
+        
+    fi;
+    
+    if ValueOption( "OnlyDatum" ) = true then
+        
+        return matrix;
+        
+    fi;
+    
+    source := LaTeXOutput( Source( morphism ) );
+    
+    range := LaTeXOutput( Range( morphism ) );
+    
+    return Concatenation( source, "\\xrightarrow{", matrix, "}", range );
+    
+end );
+
+##
+# MakeShowable( [ "text/latex", "application/x-latex" ], IsAdditiveClosureMorphism );
+# MakeShowable( [ "text/latex", "application/x-latex" ], IsAdditiveClosureObject );
+
